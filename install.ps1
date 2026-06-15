@@ -15,8 +15,8 @@ Write-Host "  OpenCode Browser Tool Installer (Windows)" -ForegroundColor Cyan
 Write-Host "============================================" -ForegroundColor Cyan
 Write-Host ""
 
-# ---- Step 1: Check Python ----
-Write-Host "[1/4] Checking Python..." -ForegroundColor Yellow
+# ---- Step 1: Check Python and dependencies ----
+Write-Host "[1/4] Checking Python and dependencies..." -ForegroundColor Yellow
 
 $pythonCmd = $null
 foreach ($cmd in @("python3", "python")) {
@@ -34,7 +34,18 @@ if (-not $pythonCmd) {
     Write-Host "Install Python 3.8+ from https://python.org and try again."
     exit 1
 }
-Write-Host "  Python: OK" -ForegroundColor Green
+
+try {
+    & $pythonCmd -c "import selenium" 2>$null
+    if ($LASTEXITCODE -ne 0) { throw }
+} catch {
+    Write-Host "  Selenium is not installed." -ForegroundColor Red
+    Write-Host "  Install it with:" -ForegroundColor Red
+    Write-Host "    pip install --user selenium" -ForegroundColor Red
+    Write-Host "  Then re-run this installer." -ForegroundColor Red
+    exit 1
+}
+Write-Host "  Python + Selenium: OK" -ForegroundColor Green
 
 # ---- Step 2: Check configuration ----
 Write-Host "[2/4] Checking configuration..." -ForegroundColor Yellow
@@ -124,46 +135,6 @@ New-Item -ItemType Directory -Force -Path $TargetDir | Out-Null
 Write-Host "[4/4] Installing..." -ForegroundColor Yellow
 Copy-Item (Join-Path $ScriptDir "browser.ts") $TargetDir -Force
 Copy-Item (Join-Path $ScriptDir "browser.py") $TargetDir -Force
-
-# Create venv and install selenium (with fallbacks)
-Write-Host "  Setting up Python virtual environment..."
-$VenvDir = Join-Path $TargetDir ".browser_venv"
-$VenvOk = $false
-
-try {
-    Remove-Item $VenvDir -Recurse -Force -ErrorAction SilentlyContinue
-    & $pythonCmd -m venv $VenvDir 2>$null
-    $VenvPython = Join-Path $VenvDir "Scripts\python.exe"
-    if (Test-Path $VenvPython) {
-        & $VenvPython -m pip install -r (Join-Path $ScriptDir "requirements.txt") 2>$null
-        if ($LASTEXITCODE -eq 0) {
-            $VenvOk = $true
-        }
-    }
-} catch {}
-
-if (-not $VenvOk) {
-    Write-Host "  venv failed. Falling back to pip install --user..." -ForegroundColor Yellow
-    Remove-Item $VenvDir -Recurse -Force -ErrorAction SilentlyContinue
-    try {
-        & $pythonCmd -m pip install --user -r (Join-Path $ScriptDir "requirements.txt") 2>$null
-        if ($LASTEXITCODE -eq 0) {
-            Write-Host "  Selenium installed (user site-packages)" -ForegroundColor Green
-        } else {
-            throw "pip failed"
-        }
-    } catch {
-        Write-Host "  ========================================" -ForegroundColor Red
-        Write-Host "  All installation methods failed." -ForegroundColor Red
-        Write-Host "  ========================================" -ForegroundColor Red
-        Write-Host "  Try installing manually:" -ForegroundColor Red
-        Write-Host "    pip install --user selenium" -ForegroundColor Red
-        Write-Host "  Then re-run this installer." -ForegroundColor Red
-        exit 1
-    }
-} else {
-    Write-Host "  Venv + Selenium: OK" -ForegroundColor Green
-}
 
 Write-Host ""
 Write-Host "============================================" -ForegroundColor Green

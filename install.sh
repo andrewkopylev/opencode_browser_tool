@@ -21,14 +21,23 @@ echo -e "${CYAN}  OpenCode Browser Tool Installer${NC}"
 echo -e "${CYAN}============================================${NC}"
 echo ""
 
-# ---- Step 1: Check Python ----
-echo -e "${YELLOW}[1/4] Checking Python...${NC}"
+# ---- Step 1: Check Python and dependencies ----
+echo -e "${YELLOW}[1/4] Checking Python and dependencies...${NC}"
 if ! command -v python3 &>/dev/null; then
     echo -e "${RED}Error: python3 not found in PATH.${NC}"
     echo "Install Python 3.8+ and try again."
     exit 1
 fi
-echo -e "${GREEN}  Python: OK${NC}"
+
+if ! python3 -c "import selenium" 2>/dev/null; then
+    echo -e "${RED}  Selenium is not installed.${NC}"
+    echo -e "${RED}  Install it with one of these commands:${NC}"
+    echo -e "${RED}    pip install --user selenium${NC}"
+    echo -e "${RED}    (add --break-system-packages if on modern Ubuntu/Debian)${NC}"
+    echo -e "${RED}  Then re-run this installer.${NC}"
+    exit 1
+fi
+echo -e "${GREEN}  Python + Selenium: OK${NC}"
 
 # ---- Step 2: Check configuration ----
 echo -e "${YELLOW}[2/4] Checking configuration...${NC}"
@@ -129,45 +138,6 @@ echo -e "${YELLOW}[4/4] Installing...${NC}"
 cp "$SCRIPT_DIR/browser.ts" "$TARGET_DIR/"
 cp "$SCRIPT_DIR/browser.py" "$TARGET_DIR/"
 chmod +x "$TARGET_DIR/browser.py"
-
-# Create venv and install selenium (with fallbacks)
-echo -e "  Setting up Python virtual environment..."
-VENV_DIR="$TARGET_DIR/.browser_venv"
-VENV_OK=""
-
-if python3 -m venv "$VENV_DIR" 2>/dev/null; then
-    if [ -f "$VENV_DIR/bin/python3" ]; then
-        VENV_PYTHON="$VENV_DIR/bin/python3"
-    elif [ -f "$VENV_DIR/bin/python" ]; then
-        VENV_PYTHON="$VENV_DIR/bin/python"
-    else
-        VENV_PYTHON=""
-    fi
-    if [ -n "$VENV_PYTHON" ] && "$VENV_PYTHON" -m pip install -r "$SCRIPT_DIR/requirements.txt" 2>&1 | grep -v "^Requirement already satisfied" > /dev/null; then
-        VENV_OK=1
-    fi
-fi
-
-if [ -z "$VENV_OK" ]; then
-    echo -e "${YELLOW}  venv failed. Falling back to pip install --user...${NC}"
-    rm -rf "$VENV_DIR" 2>/dev/null
-    if python3 -m pip install --user -r "$SCRIPT_DIR/requirements.txt" 2>/dev/null; then
-        echo -e "${GREEN}  Selenium installed (user site-packages)${NC}"
-    else
-        echo -e "${RED}  ========================================${NC}"
-        echo -e "${RED}  All installation methods failed.${NC}"
-        echo -e "${RED}  ========================================${NC}"
-        echo -e "${RED}  On Ubuntu/Debian, try:${NC}"
-        echo -e "${RED}    sudo apt install python3-venv${NC}"
-        echo -e "${RED}  Then re-run this installer.${NC}"
-        echo -e "${RED}  Or install manually:${NC}"
-        echo -e "${RED}    pip install --user selenium${NC}"
-        echo -e "${RED}    (add --break-system-packages if needed)${NC}"
-        exit 1
-    fi
-else
-    echo -e "${GREEN}  Venv + Selenium: OK${NC}"
-fi
 
 echo ""
 echo -e "${GREEN}============================================${NC}"
