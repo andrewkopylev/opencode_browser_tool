@@ -89,8 +89,7 @@ Each browser session runs as a long-lived daemon process that keeps the Selenium
 
 ## Requirements
 
-- **Python 3.8+** with pip
-- **Selenium** Python package
+- **Python 3.8+** (used only to create a virtual environment — no system-level packages are touched)
 - **Chrome** browser (or Chromium)
 - **ChromeDriver** + **Chrome** — download both from the official [Chrome for Testing](https://googlechromelabs.github.io/chrome-for-testing/) page. Always use a matched pair (same version) from this site.
 - **OpenCode** (any recent version)
@@ -100,14 +99,11 @@ Each browser session runs as a long-lived daemon process that keeps the Selenium
 ### Quick install
 
 ```bash
-# 1. Install Python dependencies
-pip install -r requirements.txt
-
-# 2. Configure paths
+# 1. Configure paths
 cp browser_config.template.json ~/.config/opencode/browser_config.json
 # Edit ~/.config/opencode/browser_config.json with your Chrome/ChromeDriver paths
 
-# 3. Run the installer
+# 2. Run the installer (creates a venv automatically, no system pip needed)
 chmod +x install.sh
 ./install.sh
 ```
@@ -115,7 +111,6 @@ chmod +x install.sh
 Or on Windows (PowerShell as Administrator):
 
 ```powershell
-pip install -r requirements.txt
 Copy-Item browser_config.template.json $env:USERPROFILE\.config\opencode\browser_config.json
 # Edit the config file with your paths
 powershell -ExecutionPolicy Bypass -File install.ps1

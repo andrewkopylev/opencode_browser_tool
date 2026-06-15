@@ -15,6 +15,11 @@ function findScript(dir: string): string {
 
 async function callBrowser(cmd: string, extra: Record<string, any> = {}, directory: string) {
     let script = findScript(directory)
+    const toolsDir = path.dirname(script)
+    const venvPython = process.platform === "win32"
+        ? path.join(toolsDir, ".browser_venv", "Scripts", "python.exe")
+        : path.join(toolsDir, ".browser_venv", "bin", "python3")
+    const pythonCmd = existsSync(venvPython) ? venvPython : "python3"
     const payload = JSON.stringify({ command: cmd, ...extra })
 
     let stdout = ""
@@ -22,7 +27,7 @@ async function callBrowser(cmd: string, extra: Record<string, any> = {}, directo
     let exitCode = 0
 
     try {
-        const proc = Bun.spawn(["python3", script], {
+        const proc = Bun.spawn([pythonCmd, script], {
             stdin: "pipe",
             stdout: "pipe",
             stderr: "pipe",

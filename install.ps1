@@ -15,8 +15,8 @@ Write-Host "  OpenCode Browser Tool Installer (Windows)" -ForegroundColor Cyan
 Write-Host "============================================" -ForegroundColor Cyan
 Write-Host ""
 
-# ---- Step 1: Check Python and dependencies ----
-Write-Host "[1/4] Checking Python and dependencies..." -ForegroundColor Yellow
+# ---- Step 1: Check Python ----
+Write-Host "[1/4] Checking Python..." -ForegroundColor Yellow
 
 $pythonCmd = $null
 foreach ($cmd in @("python3", "python")) {
@@ -34,18 +34,7 @@ if (-not $pythonCmd) {
     Write-Host "Install Python 3.8+ from https://python.org and try again."
     exit 1
 }
-
-try {
-    & $pythonCmd -c "import selenium" 2>&1 | Out-Null
-    if ($LASTEXITCODE -ne 0) {
-        throw "not installed"
-    }
-} catch {
-    Write-Host "Selenium not installed. Installing..." -ForegroundColor Yellow
-    $reqFile = Join-Path $ScriptDir "requirements.txt"
-    & $pythonCmd -m pip install -r $reqFile
-}
-Write-Host "  Python + Selenium: OK" -ForegroundColor Green
+Write-Host "  Python: OK" -ForegroundColor Green
 
 # ---- Step 2: Check configuration ----
 Write-Host "[2/4] Checking configuration..." -ForegroundColor Yellow
@@ -135,6 +124,20 @@ New-Item -ItemType Directory -Force -Path $TargetDir | Out-Null
 Write-Host "[4/4] Installing..." -ForegroundColor Yellow
 Copy-Item (Join-Path $ScriptDir "browser.ts") $TargetDir -Force
 Copy-Item (Join-Path $ScriptDir "browser.py") $TargetDir -Force
+
+# Create venv and install selenium
+Write-Host "  Setting up Python virtual environment..."
+$VenvDir = Join-Path $TargetDir ".browser_venv"
+if (Test-Path $VenvDir) { Remove-Item $VenvDir -Recurse -Force }
+& $pythonCmd -m venv $VenvDir
+$VenvPython = Join-Path $VenvDir "Scripts\python.exe"
+if (-not (Test-Path $VenvPython)) {
+    Write-Host "  Error: venv creation failed — Python binary not found." -ForegroundColor Red
+    exit 1
+}
+$reqFile = Join-Path $ScriptDir "requirements.txt"
+& $VenvPython -m pip install -r $reqFile 2>&1 | Select-String -Pattern "Requirement already satisfied" -NotMatch
+Write-Host "  Venv + Selenium: OK" -ForegroundColor Green
 
 Write-Host ""
 Write-Host "============================================" -ForegroundColor Green

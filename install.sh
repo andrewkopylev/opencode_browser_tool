@@ -21,19 +21,14 @@ echo -e "${CYAN}  OpenCode Browser Tool Installer${NC}"
 echo -e "${CYAN}============================================${NC}"
 echo ""
 
-# ---- Step 1: Check Python and dependencies ----
-echo -e "${YELLOW}[1/4] Checking Python and dependencies...${NC}"
+# ---- Step 1: Check Python ----
+echo -e "${YELLOW}[1/4] Checking Python...${NC}"
 if ! command -v python3 &>/dev/null; then
     echo -e "${RED}Error: python3 not found in PATH.${NC}"
     echo "Install Python 3.8+ and try again."
     exit 1
 fi
-
-if ! python3 -c "import selenium" 2>/dev/null; then
-    echo -e "${YELLOW}Selenium not installed. Installing...${NC}"
-    pip3 install -r "$SCRIPT_DIR/requirements.txt"
-fi
-echo -e "${GREEN}  Python + Selenium: OK${NC}"
+echo -e "${GREEN}  Python: OK${NC}"
 
 # ---- Step 2: Check configuration ----
 echo -e "${YELLOW}[2/4] Checking configuration...${NC}"
@@ -134,6 +129,24 @@ echo -e "${YELLOW}[4/4] Installing...${NC}"
 cp "$SCRIPT_DIR/browser.ts" "$TARGET_DIR/"
 cp "$SCRIPT_DIR/browser.py" "$TARGET_DIR/"
 chmod +x "$TARGET_DIR/browser.py"
+
+# Create venv and install selenium
+echo -e "  Setting up Python virtual environment..."
+VENV_DIR="$TARGET_DIR/.browser_venv"
+if [ -d "$VENV_DIR" ]; then
+    rm -rf "$VENV_DIR"
+fi
+python3 -m venv "$VENV_DIR"
+if [ -f "$VENV_DIR/bin/python3" ]; then
+    VENV_PYTHON="$VENV_DIR/bin/python3"
+elif [ -f "$VENV_DIR/bin/python" ]; then
+    VENV_PYTHON="$VENV_DIR/bin/python"
+else
+    echo -e "${RED}  Error: venv creation failed — Python binary not found.${NC}"
+    exit 1
+fi
+"$VENV_PYTHON" -m pip install -r "$SCRIPT_DIR/requirements.txt" 2>&1 | grep -v "^Requirement already satisfied" || true
+echo -e "${GREEN}  Venv + Selenium: OK${NC}"
 
 echo ""
 echo -e "${GREEN}============================================${NC}"
