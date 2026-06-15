@@ -1,0 +1,6 @@
+{
+  "chrome_binary": "/path/to/chrome",
+  "chromedriver_path": "/path/to/chromedriver",
+  "headless": false,
+  "screenshot_dir": ""
+}
