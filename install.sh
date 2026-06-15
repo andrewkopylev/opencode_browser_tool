@@ -130,23 +130,44 @@ cp "$SCRIPT_DIR/browser.ts" "$TARGET_DIR/"
 cp "$SCRIPT_DIR/browser.py" "$TARGET_DIR/"
 chmod +x "$TARGET_DIR/browser.py"
 
-# Create venv and install selenium
+# Create venv and install selenium (with fallbacks)
 echo -e "  Setting up Python virtual environment..."
 VENV_DIR="$TARGET_DIR/.browser_venv"
-if [ -d "$VENV_DIR" ]; then
-    rm -rf "$VENV_DIR"
+VENV_OK=""
+
+if python3 -m venv "$VENV_DIR" 2>/dev/null; then
+    if [ -f "$VENV_DIR/bin/python3" ]; then
+        VENV_PYTHON="$VENV_DIR/bin/python3"
+    elif [ -f "$VENV_DIR/bin/python" ]; then
+        VENV_PYTHON="$VENV_DIR/bin/python"
+    else
+        VENV_PYTHON=""
+    fi
+    if [ -n "$VENV_PYTHON" ] && "$VENV_PYTHON" -m pip install -r "$SCRIPT_DIR/requirements.txt" 2>&1 | grep -v "^Requirement already satisfied" > /dev/null; then
+        VENV_OK=1
+    fi
 fi
-python3 -m venv "$VENV_DIR"
-if [ -f "$VENV_DIR/bin/python3" ]; then
-    VENV_PYTHON="$VENV_DIR/bin/python3"
-elif [ -f "$VENV_DIR/bin/python" ]; then
-    VENV_PYTHON="$VENV_DIR/bin/python"
+
+if [ -z "$VENV_OK" ]; then
+    echo -e "${YELLOW}  venv failed. Falling back to pip install --user...${NC}"
+    rm -rf "$VENV_DIR" 2>/dev/null
+    if python3 -m pip install --user -r "$SCRIPT_DIR/requirements.txt" 2>/dev/null; then
+        echo -e "${GREEN}  Selenium installed (user site-packages)${NC}"
+    else
+        echo -e "${RED}  ========================================${NC}"
+        echo -e "${RED}  All installation methods failed.${NC}"
+        echo -e "${RED}  ========================================${NC}"
+        echo -e "${RED}  On Ubuntu/Debian, try:${NC}"
+        echo -e "${RED}    sudo apt install python3-venv${NC}"
+        echo -e "${RED}  Then re-run this installer.${NC}"
+        echo -e "${RED}  Or install manually:${NC}"
+        echo -e "${RED}    pip install --user selenium${NC}"
+        echo -e "${RED}    (add --break-system-packages if needed)${NC}"
+        exit 1
+    fi
 else
-    echo -e "${RED}  Error: venv creation failed — Python binary not found.${NC}"
-    exit 1
+    echo -e "${GREEN}  Venv + Selenium: OK${NC}"
 fi
-"$VENV_PYTHON" -m pip install -r "$SCRIPT_DIR/requirements.txt" 2>&1 | grep -v "^Requirement already satisfied" || true
-echo -e "${GREEN}  Venv + Selenium: OK${NC}"
 
 echo ""
 echo -e "${GREEN}============================================${NC}"

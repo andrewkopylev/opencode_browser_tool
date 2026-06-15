@@ -125,19 +125,45 @@ Write-Host "[4/4] Installing..." -ForegroundColor Yellow
 Copy-Item (Join-Path $ScriptDir "browser.ts") $TargetDir -Force
 Copy-Item (Join-Path $ScriptDir "browser.py") $TargetDir -Force
 
-# Create venv and install selenium
+# Create venv and install selenium (with fallbacks)
 Write-Host "  Setting up Python virtual environment..."
 $VenvDir = Join-Path $TargetDir ".browser_venv"
-if (Test-Path $VenvDir) { Remove-Item $VenvDir -Recurse -Force }
-& $pythonCmd -m venv $VenvDir
-$VenvPython = Join-Path $VenvDir "Scripts\python.exe"
-if (-not (Test-Path $VenvPython)) {
-    Write-Host "  Error: venv creation failed — Python binary not found." -ForegroundColor Red
-    exit 1
+$VenvOk = $false
+
+try {
+    Remove-Item $VenvDir -Recurse -Force -ErrorAction SilentlyContinue
+    & $pythonCmd -m venv $VenvDir 2>$null
+    $VenvPython = Join-Path $VenvDir "Scripts\python.exe"
+    if (Test-Path $VenvPython) {
+        & $VenvPython -m pip install -r (Join-Path $ScriptDir "requirements.txt") 2>$null
+        if ($LASTEXITCODE -eq 0) {
+            $VenvOk = $true
+        }
+    }
+} catch {}
+
+if (-not $VenvOk) {
+    Write-Host "  venv failed. Falling back to pip install --user..." -ForegroundColor Yellow
+    Remove-Item $VenvDir -Recurse -Force -ErrorAction SilentlyContinue
+    try {
+        & $pythonCmd -m pip install --user -r (Join-Path $ScriptDir "requirements.txt") 2>$null
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "  Selenium installed (user site-packages)" -ForegroundColor Green
+        } else {
+            throw "pip failed"
+        }
+    } catch {
+        Write-Host "  ========================================" -ForegroundColor Red
+        Write-Host "  All installation methods failed." -ForegroundColor Red
+        Write-Host "  ========================================" -ForegroundColor Red
+        Write-Host "  Try installing manually:" -ForegroundColor Red
+        Write-Host "    pip install --user selenium" -ForegroundColor Red
+        Write-Host "  Then re-run this installer." -ForegroundColor Red
+        exit 1
+    }
+} else {
+    Write-Host "  Venv + Selenium: OK" -ForegroundColor Green
 }
-$reqFile = Join-Path $ScriptDir "requirements.txt"
-& $VenvPython -m pip install -r $reqFile 2>&1 | Select-String -Pattern "Requirement already satisfied" -NotMatch
-Write-Host "  Venv + Selenium: OK" -ForegroundColor Green
 
 Write-Host ""
 Write-Host "============================================" -ForegroundColor Green
