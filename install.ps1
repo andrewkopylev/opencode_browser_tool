@@ -97,14 +97,14 @@ if (-not (Test-Path $ConfigDst)) {
 }
 "@ | Set-Content $ConfigDst
     }
-    Write-Host "  ========================================" -ForegroundColor Red
-    Write-Host "  ACTION REQUIRED" -ForegroundColor Red
-    Write-Host "  ========================================" -ForegroundColor Red
-    Write-Host "  1. Edit $ConfigDst" -ForegroundColor Red
-    Write-Host "  2. Set chrome_binary and chromedriver_path" -ForegroundColor Red
-    Write-Host "  3. Download matched pair from:" -ForegroundColor Red
-    Write-Host "     https://googlechromelabs.github.io/chrome-for-testing/" -ForegroundColor Red
-    Write-Host "  ========================================" -ForegroundColor Red
+    Write-Host "  ========================================" -ForegroundColor White
+    Write-Host "  ACTION REQUIRED" -ForegroundColor White
+    Write-Host "  ========================================" -ForegroundColor White
+    Write-Host "  1. Edit $ConfigDst" -ForegroundColor White
+    Write-Host "  2. Set chrome_binary and chromedriver_path" -ForegroundColor White
+    Write-Host "  3. Download matched pair from:" -ForegroundColor White
+    Write-Host "     https://googlechromelabs.github.io/chrome-for-testing/" -ForegroundColor White
+    Write-Host "  ========================================" -ForegroundColor White
     Write-Host ""
     Read-Host "  Press Enter when ready (or Ctrl+C to abort)"
 }

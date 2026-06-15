@@ -9,6 +9,7 @@ RED="\033[0;31m"
 GREEN="\033[0;32m"
 YELLOW="\033[0;33m"
 CYAN="\033[0;36m"
+WHITE="\033[1;37m"
 NC="\033[0m" # No Color
 
 CONFIG_SRC="browser_config.template.json"
@@ -82,14 +83,14 @@ if [ ! -f "$CONFIG_DST" ]; then
 }
 EOF
     fi
-    echo -e "${RED}  ========================================${NC}"
-    echo -e "${RED}  ACTION REQUIRED${NC}"
-    echo -e "${RED}  ========================================${NC}"
-    echo -e "${RED}  1. Edit ${CONFIG_DST}${NC}"
-    echo -e "${RED}  2. Set chrome_binary and chromedriver_path${NC}"
-    echo -e "${RED}  3. Download matched pair from:${NC}"
-    echo -e "${RED}     https://googlechromelabs.github.io/chrome-for-testing/${NC}"
-    echo -e "${RED}  ========================================${NC}"
+    echo -e "${WHITE}  ========================================${NC}"
+    echo -e "${WHITE}  ACTION REQUIRED${NC}"
+    echo -e "${WHITE}  ========================================${NC}"
+    echo -e "${WHITE}  1. Edit ${CONFIG_DST}${NC}"
+    echo -e "${WHITE}  2. Set chrome_binary and chromedriver_path${NC}"
+    echo -e "${WHITE}  3. Download matched pair from:${NC}"
+    echo -e "${WHITE}     https://googlechromelabs.github.io/chrome-for-testing/${NC}"
+    echo -e "${WHITE}  ========================================${NC}"
     echo ""
     read -rp "  Press Enter when ready (or Ctrl+C to abort)... "
 fi
