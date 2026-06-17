@@ -1,11 +1,13 @@
 import { tool } from "@opencode-ai/plugin"
 import path from "path"
+import os from "node:os"
 import { existsSync } from "fs"
 
 function findScript(dir: string): string {
     const candidates = [
         path.join(dir, ".opencode/tools/browser.py"),
         path.join(dir, "browser.py"),
+        path.join(os.homedir(), ".config", "opencode", "tools", "browser.py"),
     ]
     for (const p of candidates) {
         if (existsSync(p)) return p
